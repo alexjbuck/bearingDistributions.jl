@@ -8,3 +8,7 @@
 .vscode/
 
 working.jl
+
+docs/Manifest.toml
+
+Manifest.toml
