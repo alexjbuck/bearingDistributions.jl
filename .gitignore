@@ -4,3 +4,7 @@
 /docs/build/
 
 *.png
+
+.vscode/
+
+working.jl
