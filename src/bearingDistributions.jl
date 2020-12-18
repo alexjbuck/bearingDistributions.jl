@@ -1,11 +1,12 @@
 module bearingDistributions
 using Distributions
 using LinearAlgebra
-using NLsolve
 using Plots
 
+include("App.jl")
+using .App
 
-export Bearing, intersectGrid
+export Bearing, intersectGrid, bisectionRoots, plotConfidenceInterval, App
 
 """
 Bearing object.
@@ -20,34 +21,60 @@ struct Bearing
 end
 
 """
-y = y1 + x*tan(θ1) - x1*tan(θ2)
-y = y2 + x*tan(θ2) - x2*tan(θ2)
+findIntersect(b1::Bearing, b2::Bearing)
 
-y - x*tan(θ1) = y1 - x1*tan(θ1)
-y - x*tan(θ2) = y2 - x2*tan(θ2)
+This solves the simultaneous equations of the two paramterized lines as below:
+    x₁ + cos(θ₁)t₁ = x₂ + cos(θ₂)t₂
+    y₁ + sin(θ₁)t₁ = y₂ + sin(θ₂)t₂
 
-[-tan(θ1) 1]   [x]  = [y1 - x1*tan(θ1)]
-[-tan(θ2) 1] * [y]  = [y2 - x2*tan(θ2)]
+    x₁ - x₂ = -cos(θ₁)t₁ + cos(θ₂)t₂
+    y₁ - y₂ = -sin(θ₁)t₁ + sin(θ₂)t₂
 
-[x] = inv( [-tan(θ1) 1] ) * [y1 - x1*tan(θ1)]
-[y] =      [-tan(θ2) 1]     [y2 - x2*tan(θ2)]
+    This can be represented in matrix form as:
+    b = Ax̄
+    
+    where:
+    x̄ = [t₁, t₂]
+    A = |-cos(θ₁) cos(θ₂)|
+        |-sin(θ₁) sin(θ₂)|
+        
+    b = [x₁ - x₂, y₁ - y₂]
 
+    Solved by:
+    x̄ = A⁻¹ ⋅ b
+
+    This matrix is singular when θ₁ and θ₂ are parallel, i.e.  mod(θ₁,π) == mod(θ₂,π)
+    In this case, there is a heuristic that sets the "intersection" as the midpoint between the two points.
+
+    Furthermore, if tᵢ<0 then there is no defined intersection point (lines pointed away from each other)
 """
 function findIntersect(b1::Bearing, b2::Bearing)
-    if mod(b1.θ-b2.θ,2π)≈π
+    if mod(b1.θ-b2.θ,π)≈0 
         point = ([b1.x;b1.y] + [b2.x;b2.y])/2
         return point
     end
 
-    A = [-tan(b1.θ) 1;
-         -tan(b2.θ) 1];
+    A = [-cos(b1.θ) cos(b2.θ);
+         -sin(b1.θ) sin(b2.θ)]
 
-    B = [(b1.y - b1.x*tan(b1.θ));
-         (b2.y - b2.x*tan(b2.θ))]
-
-    point = inv(A) * B;
+    b = [b1.x - b2.x, b1.y - b2.y];
+    
+    t = inv(A) * b;
+    if any(t .< 0)
+        point = ([b1.x;b1.y] + [b2.x;b2.y])/2
+        return point
+    end
+    point = [b1.x, b1.y] + [cos(b1.θ), sin(b1.θ)]*t[1];
+    return point
 end
 
+
+"""
+boundingBox(b1::Bearing, b2::Bearing)    
+    Return the box [xₗ xᵤ;yₗ yᵤ] around the intersection of two bearings.
+
+    Size the box such that the origin of the bearings will always be included in the box.
+"""
 function boundingBox(b1::Bearing, b2::Bearing)
     pᵢ = findIntersect(b1, b2);
     p₁ = [b1.x;b1.y];
@@ -58,19 +85,36 @@ function boundingBox(b1::Bearing, b2::Bearing)
     D₂ = norm(d₂);
     D = max(D₁, D₂);
     box = pᵢ .+ 1*[-D D;-D D];
+    box
 end
 
+"""
+rangeFromBox(box::Array{Number,2}; length = 51)
+
+    Wrapper to splat out the box array.
+"""
 function rangeFromBox(box::Array{Number,2}; length = 51)
     x,y = rangeFromBox(box...; length)
     return x,y
 end
 
+
+"""
+rangeFromBox(x1,y1,x2,y2; length)
+
+    convert `x1`:`x2` and `y1`:`y2` into ranges of length `length`
+"""
 function rangeFromBox(x1,y1,x2,y2; length)
     x = range(x1, x2; length);
     y = range(y1, y2; length);
     return x,y
 end
 
+"""
+probabilityGrid(b::Bearing, x::AbstractArray, y::AbstractArray)
+
+    Compute the probability grid over ranges `x` and `y` of bearing `b`
+"""
 function probabilityGrid(b::Bearing, x::AbstractArray, y::AbstractArray)
     D = Normal(b.θ, b.σ);
     if mod.(b.θ,2π)<π/2 || mod(b.θ,2π)>3*π/2
@@ -84,6 +128,14 @@ function probabilityGrid(b::Bearing, x::AbstractArray, y::AbstractArray)
     return x, y, P
 end
 
+"""
+intersectGrid(b1::Bearing, b2::Bearing; length = 51)
+
+    Compute the probability grid of the intersection of `b1` and `b2` over ranges `x` and `y`
+
+    Return the probability grids for `b1`, `b2`, and the intersection.
+
+"""
 function intersectGrid(b1::Bearing, b2::Bearing; length = 51)
     box = boundingBox(b1, b2);
     x,y = rangeFromBox(box...; length)
@@ -91,11 +143,17 @@ function intersectGrid(b1::Bearing, b2::Bearing; length = 51)
     _,_,P₂ = probabilityGrid(b2, x, y);
     Pᵢ = P₁ .* P₂
     ΔA = convert(Float64,x.step * y.step);
-    Pᵢ = Pᵢ ./ sum(Pᵢ[:])/ΔA;
+    Pᵢ = Pᵢ ./ sum(Pᵢ[:])
+    Pᵢ = Pᵢ ./ ΔA;
     return x, y, Pᵢ, P₁, P₂
 end
 
-function plotProbabilityGrids(x,y,P...)
+"""
+plotProbabilityGrids(x::AbstractArray, y::AbstractArray, P...)
+
+    Plot of tuple of probability grids `P` on ranges x and y with the default contour levels
+"""
+function plotProbabilityGrids(x::AbstractArray, y::AbstractArray, P...)
     p = contour(;aspect_ratio=:equal);
     for P in P
         contour!(x,y,P)
@@ -103,15 +161,59 @@ function plotProbabilityGrids(x,y,P...)
     display(p)
 end
 
-function plotConfidenceInterval(α,x,y,P...)
-    plot = contour(;aspect_ratio=:equal);
-    ΔA = convert(Float64,x.step*x.step);
-    sol = [nlsolve( (p) -> sum(ΔA*P[P .> p])-α, [0.0]; iterations = 50, method = :anderson, ftol = 1e-3) for P in P]
-    zeros = [sol.zero for sol in sol]
+"""
+plotConfidenceInterval(α::Number, x::AbstractArray, y::AbstractArray, P...)
+
+    Plot the tuple of probability grids `P` on ranges x and y at the defined confidence interval `α`
+"""
+function plotConfidenceInterval(α::Number, x::AbstractArray, y::AbstractArray, P...)
+    handle = contour(;aspect_ratio=:equal);
+    ΔA = convert(Float64,x.step*y.step);
+    zeros = [bisectionRoots((p) -> ΔA*sum(Pⱼ[Pⱼ .> p]) - α, minimum(Pⱼ),maximum(Pⱼ)) for Pⱼ in P]
     for (i,P) in enumerate(P)
-        contour!(x,y,P; levels=zeros[i])
+        contour!(x,y,P; levels=[zeros[i]])
     end
-    display(plot)
+    return handle
 end
-    
+
+"""
+bisectionRoots(f::Function,xₗ::Number,xᵤ::Number; max_iteration = 100, xtol = 1e-3)
+
+    Computes the root of function `f(x)` on the bounded range `[xₗ xᵤ]` with the Bisection algorithm.
+
+    Exit condition is defined by xᵤ-xₗ < xtol
+"""
+function bisectionRoots(f::Function,xₗ::Number,xᵤ::Number; max_iteration = 100, xtol = 1e-3)
+    fₗ  = f(xₗ);
+    fᵤ = f(xᵤ);
+
+    if fₗ == 0
+        return xₗ
+    elseif fᵤ == 0
+        return xᵤ
+    end
+
+    if (fₗ<0 && fᵤ<0) || (fₗ>0 && fᵤ>0)
+        error("There is no root of the given function on the given range")
+        return
+    end
+
+    xᵢ = (xₗ + xᵤ)/2;
+    iter = 1;
+
+    while abs(xᵤ-xₗ) > xtol
+        iter > max_iteration ? break : iter+=1;
+        if sign(f(xᵢ))==sign(fₗ)
+            xₗ = xᵢ
+            xᵢ = (xᵢ + xᵤ)/2
+        else
+            xᵤ = xᵢ
+            xᵢ = (xₗ + xᵢ)/2
+        end
+    end
+    return xᵢ
+end
+
+
+
 end

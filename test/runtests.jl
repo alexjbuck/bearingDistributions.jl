@@ -21,12 +21,13 @@ const bd = bearingDistributions
     b2 = Bearing(π/2, .1, 1, 0);
     @test bd.boundingBox(b1, b2) ≈ [0 2; 0 2]
 
-    b1 = Bearing(0, .2, 0, 1);
-    b2 = Bearing(π/2, .2, 1, 0);
-    box = bd.boundingBox(b1, b2);
-    x,y = bd.rangeFromBox(box...; length = 51)
+    b1 = Bearing(0, .1, 0, 1);
+    b2 = Bearing(π/2, .1, 1, 0);
+    len = 101;
+    α = .95;
+    @test typeof(plotConfidenceInterval(α,bd.intersectGrid(b1, b2; length=len)...)) <: AbstractPlot
+end
 
-    display(contour(bd.probabilityGrid(b1,x,y)...))
-    display(contour(bd.probabilityGrid(b2,x,y)...))
-    display(contour(intersectGrid(b1, b2; length = 51)...))
+@testset "App.jl" begin
+    @test App.julia_main() ≈ 0
 end
