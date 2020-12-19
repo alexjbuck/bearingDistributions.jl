@@ -5,6 +5,7 @@ using Plots
 
 include("App.jl")
 using .App
+import .App.julia_main
 
 export Bearing, intersectGrid, bisectionRoots, plotConfidenceInterval, App
 
