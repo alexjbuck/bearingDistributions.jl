@@ -83,7 +83,7 @@ function boundingBox(b1::Bearing, b2::Bearing)
     d₂ = pᵢ - p₂;
     D₁ = norm(d₁);
     D₂ = norm(d₂);
-    D = max(D₁, D₂);
+    D = 1.5*max(D₁, D₂);
     box = pᵢ .+ 1*[-D D;-D D];
     box
 end
@@ -116,12 +116,10 @@ probabilityGrid(b::Bearing, x::AbstractArray, y::AbstractArray)
     Compute the probability grid over ranges `x` and `y` of bearing `b`
 """
 function probabilityGrid(b::Bearing, x::AbstractArray, y::AbstractArray)
-    D = Normal(b.θ, b.σ);
-    if mod.(b.θ,2π)<π/2 || mod(b.θ,2π)>3*π/2
-        Θ = atan.(y .- b.y, x' .- b.x);
-    else
-        Θ = mod.(atan.(y .- b.y, x' .- b.x),2π);
-    end
+    θ = mod(b.θ + π,2π) - π
+    D = Normal(0, b.σ);
+    Θ = atan.(y .- b.y, x' .- b.x) .- θ;
+    Θ = mod.(Θ .+ π, 2π) .-π
     P = pdf.(D, Θ);
     ΔA = convert(Float64,x.step * y.step);
     P = P./sum(P[:])/ΔA;
