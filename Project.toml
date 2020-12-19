@@ -18,6 +18,7 @@ WebSockets = "104b5d7c-a370-577a-8038-80a2059c5097"
 [compat]
 PackageCompiler = "1.2"
 Mux = "0.7"
+Interact = "0.10"
 julia = "1"
 
 [extras]
