@@ -16,6 +16,7 @@ Sockets = "6462fe0b-24de-5631-8697-dd941f90decc"
 WebSockets = "104b5d7c-a370-577a-8038-80a2059c5097"
 
 [compat]
+GR = "0.53"
 PackageCompiler = "1.2"
 Mux = "0.7"
 Interact = "0.10"
