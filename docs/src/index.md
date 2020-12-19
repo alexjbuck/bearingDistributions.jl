@@ -9,4 +9,5 @@ CurrentModule = bearingDistributions
 
 ```@autodocs
 Modules = [bearingDistributions]
+Pages   = ["App.jl","bearingDistributions.jl"]
 ```
