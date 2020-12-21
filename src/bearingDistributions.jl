@@ -94,7 +94,7 @@ rangeFromBox(box::Array{Number,2}; length = 51)
 
     Wrapper to splat out the box array.
 """
-function rangeFromBox(box::Array{Number,2}; length = 51)
+function rangeFromBox(box::Array{T,2} where T<:Number ; length = 51)
     x,y = rangeFromBox(box...; length)
     return x,y
 end
@@ -193,8 +193,7 @@ function bisectionRoots(f::Function,xₗ::Number,xᵤ::Number; max_iteration = 1
     end
 
     if (fₗ<0 && fᵤ<0) || (fₗ>0 && fᵤ>0)
-        error("There is no root of the given function on the given range")
-        return
+        return NaN
     end
 
     xᵢ = (xₗ + xᵤ)/2;

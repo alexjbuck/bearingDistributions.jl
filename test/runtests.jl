@@ -17,17 +17,36 @@ const bd = bearingDistributions
     @test b2.σ ≈ .2
     @test bd.findIntersect(b1, b2) ≈ [.5;.5] 
 
+    b1 = Bearing(0, .1, 0, 0);
+    b2 = Bearing(π, .1, 1, 0);
+    @test bd.findIntersect(b1, b2) ≈ [.5, 0]
+
+    b1 = Bearing(π, .1, 0, 0);
+    b2 = Bearing(π/2, .1, 1, 0);
+    @test bd.findIntersect(b1, b2) ≈ [.5, 0]
+
     b1 = Bearing(0, 1, 0, 1);
     b2 = Bearing(π/2, .1, 1, 0);
     @test bd.boundingBox(b1, b2) ≈ [0 2; 0 2]
 
+    @test bd.rangeFromBox([0 2; 0 2]; length = 2) ≈ ([0,2],[0,2])
+
+    @test isnan(bisectionRoots((x)-> x.^2+1, -1, 1, 100))
+
+    @test bisectionRoots((x) -> x+1, -2, 0; xtol = 1e-9) ≈ -1
+
+    @test bisectionRoots((x) -> x+1, -1, 0) ≈ -1
+    @test bisectionRoots((x) -> x+1, -2, -1) ≈ -1
+
     b1 = Bearing(0, .1, 0, 1);
     b2 = Bearing(π/2, .1, 1, 0);
-    len = 101;
+    len = 11;
     α = .95;
     @test typeof(plotConfidenceInterval(α,bd.intersectGrid(b1, b2; length=len)...)) <: AbstractPlot
-end
 
-@testset "App.jl" begin
-    @test App.julia_main() ≈ 0
+    @test typeof(App.app([]) <: Widgets.Widget{:manipulate,Any}
+
+    @test typeof(App.launchApp(8001)) <: Task
+
+    @test julia_main() == 0
 end
