@@ -8,3 +8,5 @@
 Visualizing the intersection of multiple angle measurements with known angle measurement distributions.
 
 Provides a web application via `App.julia_main()` that runs a web application for visualization on `localhost:8000`
+
+![Rendering of Web Application](render.png)
