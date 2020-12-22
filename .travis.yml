@@ -27,7 +27,7 @@ jobs:
     - stage: Documentation
       julia: 1
       script: |
-        julia --project=docs -e '
+        - julia --project=docs -e '
           using Pkg
           Pkg.develop(PackageSpec(path=pwd()))
           Pkg.instantiate()
@@ -35,6 +35,7 @@ jobs:
           using bearingDistributions
           doctest(bearingDistributions)
           include("docs/make.jl")'
+        - julia --project=docs/ docs/make.jl
       after_success: skip
 after_success:
   - |
