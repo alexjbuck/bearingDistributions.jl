@@ -1,5 +1,5 @@
 using bearingDistributions
-Using Interact
+using Interact
 using Plots
 using Test
 
