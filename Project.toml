@@ -1,9 +1,10 @@
 name = "bearingDistributions"
 uuid = "97025544-dab9-4480-a8b9-82989a134056"
 authors = ["Alex Buck <alexjbuck@gmail.com> and contributors"]
-version = "0.3.1"
+version = "0.4.0"
 
 [deps]
+Blink = "ad839575-38b3-5650-b840-f874b8c74a25"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 GR = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
 Interact = "c601a237-2ae4-5e1e-952c-7a85b0c7eef1"
