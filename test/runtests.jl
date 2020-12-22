@@ -44,7 +44,7 @@ const bd = bearingDistributions
     α = .95;
     @test typeof(plotConfidenceInterval(α,bd.intersectGrid(b1, b2; length=len)...)) <: AbstractPlot
 
-    @test typeof(App.app([]) <: Widgets.Widget{:manipulate,Any}
+    @test typeof(App.app([])) <: Widgets.Widget{:manipulate,Any}
 
     #t = App.launchApp(8001)
     #@test typeof(t) <: Task
