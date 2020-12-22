@@ -1,4 +1,5 @@
 using bearingDistributions
+Using Interact
 using Plots
 using Test
 
@@ -27,11 +28,11 @@ const bd = bearingDistributions
 
     b1 = Bearing(0, 1, 0, 1);
     b2 = Bearing(π/2, .1, 1, 0);
-    @test bd.boundingBox(b1, b2) ≈ [0 2; 0 2]
+    @test bd.boundingBox(b1, b2) == [-.5 2.5; -.5 2.5]
 
-    @test bd.rangeFromBox([0 2; 0 2]; length = 2) ≈ ([0,2],[0,2])
+    @test bd.rangeFromBox([0 2; 0 2]; length = 2) == ([0,2],[0,2])
 
-    @test isnan(bisectionRoots((x)-> x.^2+1, -1, 1, 100))
+    @test isnan(bisectionRoots((x)-> x.^2+1, -1, 1))
 
     @test bisectionRoots((x) -> x+1, -2, 0; xtol = 1e-9) ≈ -1
 
