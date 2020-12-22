@@ -46,7 +46,11 @@ const bd = bearingDistributions
 
     @test typeof(App.app([]) <: Widgets.Widget{:manipulate,Any}
 
-    @test typeof(App.launchApp(8001)) <: Task
+    t = App.launchApp(8001)
+    @test typeof(t) <: Task
+    @test t.state = :runnable
+    t.state = :done
+    @test t.state = :done
 
     @test julia_main() == 0
 end
