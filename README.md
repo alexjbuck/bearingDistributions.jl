@@ -7,6 +7,6 @@
 
 Visualizing the intersection of multiple angle measurements with known angle measurement distributions.
 
-Provides a web application via `App.julia_main()` that runs a web application for visualization on `localhost:8000`
+Provides a web application via `App.julia_main()` that runs a web application for visualization on `localhost:8000`. Working on version that uses Electron windows via Blink.jl. This is part of v0.4.0.
 
 ![Rendering of Web Application](render.png)
