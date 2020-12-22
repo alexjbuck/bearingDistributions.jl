@@ -3,9 +3,8 @@ using Distributions
 using LinearAlgebra
 using Plots
 
-#include("App.jl")
+include("App.jl")
 using .App
-import .App.julia_main
 
 export Bearing, intersectGrid, bisectionRoots, plotConfidenceInterval, App
 
